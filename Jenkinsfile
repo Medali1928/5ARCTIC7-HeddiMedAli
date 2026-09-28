@@ -82,14 +82,16 @@ pipeline {
                                                   passwordVariable: 'DH_PASS')]) {
                     sh '''
                         echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
-                        docker tag gestion-projets-backend:latest  $DH_USER/$IMAGE_BACKEND:$BUILD_NUMBER
-                        docker tag gestion-projets-backend:latest  $DH_USER/$IMAGE_BACKEND:latest
-                        docker tag gestion-projets-frontend:latest $DH_USER/$IMAGE_FRONTEND:$BUILD_NUMBER
-                        docker tag gestion-projets-frontend:latest $DH_USER/$IMAGE_FRONTEND:latest
-                        docker push $DH_USER/$IMAGE_BACKEND:$BUILD_NUMBER
-                        docker push $DH_USER/$IMAGE_BACKEND:latest
-                        docker push $DH_USER/$IMAGE_FRONTEND:$BUILD_NUMBER
-                        docker push $DH_USER/$IMAGE_FRONTEND:latest
+                        # Docker exige des noms en minuscules (Medali1928 -> medali1928)
+                        NS=$(echo "$DH_USER" | tr '[:upper:]' '[:lower:]')
+                        docker tag gestion-projets-backend:latest  $NS/$IMAGE_BACKEND:$BUILD_NUMBER
+                        docker tag gestion-projets-backend:latest  $NS/$IMAGE_BACKEND:latest
+                        docker tag gestion-projets-frontend:latest $NS/$IMAGE_FRONTEND:$BUILD_NUMBER
+                        docker tag gestion-projets-frontend:latest $NS/$IMAGE_FRONTEND:latest
+                        docker push $NS/$IMAGE_BACKEND:$BUILD_NUMBER
+                        docker push $NS/$IMAGE_BACKEND:latest
+                        docker push $NS/$IMAGE_FRONTEND:$BUILD_NUMBER
+                        docker push $NS/$IMAGE_FRONTEND:latest
                         docker logout
                     '''
                 }
