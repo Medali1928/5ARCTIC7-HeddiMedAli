@@ -1,0 +1,53 @@
+name: gestion-projets
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: gp-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gestion_projets_db
+    volumes:
+      - mysql-data:/var/lib/mysql          # volume persistant
+    networks:
+      - gp-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    image: gestion-projets-backend:latest
+    container_name: gp-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/gestion_projets_db?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    ports:
+      - "8089:8080"                        # 8080 est déjà pris par Jenkins sur la VM
+    depends_on:
+      mysql:
+        condition: service_healthy         # le backend démarre après la base
+    networks:
+      - gp-net
+
+  frontend:
+    build: ./frontend
+    image: gestion-projets-frontend:latest
+    container_name: gp-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend                            # le frontend démarre après le backend
+    networks:
+      - gp-net
+
+volumes:
+  mysql-data:
+
+networks:
+  gp-net:                                  # réseau Docker dédié
+    driver: bridge
